@@ -3,6 +3,7 @@
 
 :root {
     color-scheme: dark;
+    box-sizing: border-box;
 }
 
 body {
@@ -13,7 +14,6 @@ body {
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    box-sizing: border-box;
 }
 
 .content {
@@ -25,30 +25,40 @@ body {
     padding: 1rem;
 }
 
-.new-note-input {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    box-sizing: border-box;
+.new-note-field {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
     color: var(--color-text);
     background-color: var(--color-bg);
     border: 1px solid var(--color-border);
-    border-radius: 0.25rem;
+    padding: 0.25rem;
     outline: none;
 }
 
-.new-note-input::placeholder {
+.new-note-field input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.5rem;
+    color: inherit;
+    font: inherit;
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+
+.new-note-field input::placeholder {
     color: var(--color-text-subtle);
 }
 
-.new-note-input:focus {
+.new-note-field:focus-within {
     border-color: var(--color-primary);
 }
 
-button {
+.add-note-button {
     color: var(--color-text);
     background-color: var(--color-tertiary);
     border: 1px solid var(--color-border);
-    border-radius: 0.25rem;
     padding: 0.4rem 0.75rem;
     cursor: pointer;
 }

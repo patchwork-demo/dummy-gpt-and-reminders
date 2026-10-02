@@ -1,13 +1,16 @@
 <html>
-<head>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <title>🍤 Notes app LMAO</title>
-    <link rel="stylesheet" href="/static/style.css" />
-</head>
-<body class="animated-gradient-bg ubuntu-regular">
-    <div
-        class="content"
-        x-data="{
+    <head>
+        <script
+            defer
+            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+        ></script>
+        <title>🍤 Notes app LMAO</title>
+        <link rel="stylesheet" href="/static/style.css" />
+    </head>
+    <body class="animated-gradient-bg ubuntu-regular">
+        <div
+            class="content"
+            x-data="{
          notes: {},
          new_note: '',
          addNote() {
@@ -21,29 +24,25 @@
             delete this.notes[id]
          }
         }"
-    >
-        <!--<div class="animated-gradient-bg box">
-            Sample text
-        </div>-->
-        <div>
-            <input
-                class="new-note-input"
-                type="text"
-                x-model="new_note"
-                name="new_note"
-                minlength="1"
-                @keyup.enter="addNote"
-            />
-            <button @click="addNote">+</button>
+        >
+            <div class="new-note-field">
+                <input
+                    type="text"
+                    x-model="new_note"
+                    name="new_note"
+                    minlength="1"
+                    @keyup.enter="addNote"
+                />
+                <button class="add-note-button" @click="addNote">🍤</button>
+            </div>
+            <ul>
+                <template x-for="(value, index) in notes" :key="index">
+                    <li>
+                        <span x-text="value.value"></span>
+                        <button @click="deleteNote(index)">Del</button>
+                    </li>
+                </template>
+            </ul>
         </div>
-        <ul>
-            <template x-for="(value, index) in notes" :key="index">
-                <li>
-                    <span x-text="value.value"></span>
-                    <button @click="deleteNote(index)">Del</button>
-                </li>
-            </template>
-        </ul>
-    </div>
-</body>
+    </body>
 </html>
