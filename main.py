@@ -1,19 +1,38 @@
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import FastAPI, Request, Response
-from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Depends, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel import Field, SQLModel, select
+from sqlmodel import Field, SQLModel, col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 
-class MemoEntity(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+def utcnow() -> datetime:
+    return datetime.now(UTC)
+
+
+class MemoBase(SQLModel):
     content: str = Field(index=True)
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(
+        default_factory=utcnow, sa_column_kwargs={"onupdate": utcnow}
+    )
+    deleted_at: datetime | None = Field(default=None)
+
+
+class MemoEntity(MemoBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+
+
+class MemoPublic(MemoBase):
+    id: int
+
+
+class MemoUpdate(SQLModel):
+    content: str = ""
 
 
 sqlite_file_name = "database.db"
@@ -61,20 +80,41 @@ async def create_memo(memo: MemoEntity, session: SessionDep) -> MemoEntity:
     return memo
 
 
+@app.patch("/api/memos/{memo_id}")
+async def update_memo(
+    memo_id: int, memo: MemoUpdate, session: SessionDep
+) -> MemoEntity:
+    memo_db = await session.get(MemoEntity, memo_id)
+    if not memo_db:
+        raise HTTPException(status_code=404, detail="Memo not found")
+    memo_data = memo.model_dump(exclude_unset=True)
+    memo_db.sqlmodel_update(memo_data)
+    session.add(memo_db)
+    await session.commit()
+    await session.refresh(memo_db)
+    return memo_db
+
+
 @app.get("/api/memos/")
 async def read_memos(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
 ) -> list[MemoEntity]:
-    result = await session.exec(select(MemoEntity).offset(offset).limit(limit))
+    statement = (
+        select(MemoEntity)
+        .where(col(MemoEntity.deleted_at).is_(None))
+        .offset(offset)
+        .limit(limit)
+    )
+    result = await session.exec(statement)
     return list(result.all())
 
 
 @app.get("/api/memos/{memo_id}")
 async def read_memo(memo_id: int, session: SessionDep) -> MemoEntity:
     memo = await session.get(MemoEntity, memo_id)
-    if not memo:
+    if not memo or memo.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Memo not found")
     return memo
 
@@ -82,8 +122,8 @@ async def read_memo(memo_id: int, session: SessionDep) -> MemoEntity:
 @app.delete("/api/memos/{memo_id}")
 async def delete_memo(memo_id: int, session: SessionDep):
     memo = await session.get(MemoEntity, memo_id)
-    if not memo:
+    if not memo or memo.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Memo not found")
-    await session.delete(memo)
+    memo.deleted_at = utcnow()
     await session.commit()
     return {"ok": True}
