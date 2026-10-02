@@ -1,0 +1,35 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv
+
+# Caches and coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# Runtime / local state
+*.db
+*.sqlite3
+*.log
+.env
+.env.*
+
+# Generated data (derived from chat.json)
+messages.txt
+messages_deduped.txt
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
