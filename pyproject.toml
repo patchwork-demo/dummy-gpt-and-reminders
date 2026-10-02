@@ -1,0 +1,21 @@
+[project]
+name = "dummy-gpt"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { email = "" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "aiosqlite>=0.22.1",
+    "fastapi[standard]>=0.142.2",
+    "sqlmodel>=0.0.47",
+]
+
+[project.scripts]
+dummy-gpt = "dummy_gpt:main"
+
+[build-system]
+requires = ["uv_build>=0.12.21,<0.13.0"]
+build-backend = "uv_build"

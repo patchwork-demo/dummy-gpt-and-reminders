@@ -1,0 +1,50 @@
+/* Nord — shared color palette.
+   https://www.nordtheme.com/docs/colors-and-palettes
+
+   Raw palette: --nord0 … --nord15
+   Semantic tokens: --color-* (dark ambiance design)
+   Import this file wherever the Nord colors are needed. */
+:root {
+    /* Polar Night */
+    --nord0: #2e3440;
+    --nord1: #3b4252;
+    --nord2: #434c5e;
+    --nord3: #4c566a;
+
+    /* Snow Storm */
+    --nord4: #d8dee9;
+    --nord5: #e5e9f0;
+    --nord6: #eceff4;
+
+    /* Frost */
+    --nord7: #8fbcbb;
+    --nord8: #88c0d0;
+    --nord9: #81a1c1;
+    --nord10: #5e81ac;
+
+    /* Aurora */
+    --nord11: #bf616a;
+    --nord12: #d08770;
+    --nord13: #ebcb8b;
+    --nord14: #a3be8c;
+    --nord15: #b48ead;
+
+    /* Semantic tokens (dark ambiance design) */
+    --color-bg: var(--nord0);
+    --color-bg-elevated: var(--nord1);
+    --color-bg-active: var(--nord2);
+    --color-border: var(--nord3);
+
+    --color-text: var(--nord6);
+    --color-text-muted: var(--nord4);
+    --color-text-subtle: var(--nord3);
+
+    --color-primary: var(--nord8);
+    --color-secondary: var(--nord9);
+    --color-tertiary: var(--nord10);
+    --color-accent: var(--nord7);
+
+    --color-error: var(--nord11);
+    --color-warning: var(--nord13);
+    --color-success: var(--nord14);
+}
