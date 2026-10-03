@@ -206,3 +206,35 @@ uv run --extra torch dummy-gpt-torch.py \
     --n-embd 128 --n-layer 3 --block-size 96 \
     --steps 20000 --batch-size 64 --threads 8
 ```
+
+## BPE tokenizer variant (`dummy-gpt-bpe.py`)
+
+Same GPT, but with a **ByteLevel BPE tokenizer** trained on the corpus instead of raw
+characters. The corpus is tokenized once into two tensors (`x_all` / `y_all`), so the
+training step does no Python-side batch building (the "precompute").
+
+```sh
+uv run --extra torch dummy-gpt-bpe.py \
+    --model bpe-128x3.pt \
+    --n-embd 128 --n-layer 3 --block-size 48 \
+    --vocab-size 2000 \
+    --steps 8000 --batch-size 128 --threads 8 \
+    --temperature 0.7
+```
+
+Generate from it (no dataset needed):
+
+```sh
+uv run --extra torch dummy-gpt-bpe.py --mode infer --model bpe-128x3.pt
+```
+
+Notes:
+
+- `--block-size` is now **in BPE tokens**. On the current corpus (~11.7 tokens/message
+  at `--vocab-size 2000`, p95 = 29), `48` covers almost everything.
+- `--vocab-size` trades quality against compute: a bigger vocabulary means fewer tokens
+  per message but a heavier `lm_head`/embedding (`n_embd x vocab`). 1000–2000 is a good
+  range — the main win is quality per parameter, not raw CPU speed.
+- The tokenizer is trained during `train` and saved **inside the checkpoint**, so
+  `infer` rebuilds it automatically; there are no extra files to manage.
+- Needs the `tokenizers` package, which is already part of the `--extra torch` group.

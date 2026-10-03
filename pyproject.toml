@@ -16,6 +16,7 @@ dependencies = [
 [project.optional-dependencies]
 torch = [
     "numpy>=1.26",
+    "tokenizers>=0.15",
     "torch>=2.4",
 ]
 
