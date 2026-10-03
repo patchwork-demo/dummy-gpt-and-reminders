@@ -70,7 +70,7 @@ All read paths must filter out rows where `deleted_at` is not `None`.
 ## Data / scratch scripts
 
 - The character-level GPT experiments live in `experiments/dummy-gpt/` and are not
-  part of the notes app; see `experiments/dummy-gpt/torch.md` for the PyTorch variant.
+  part of the notes app; see `experiments/dummy-gpt/README.md` for details.
 - `experiments/dummy-gpt/chat-message-body-to-txt.py` and `dedupe-messages.py` are
   standalone scripts with hardcoded relative filenames (`chat.json` -> `messages.txt`
   -> `messages_deduped.txt`). Run them from inside `experiments/dummy-gpt/`; their

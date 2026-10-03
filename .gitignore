@@ -25,12 +25,13 @@ htmlcov/
 .env
 .env.*
 
-# Generated data (derived from chat.json)
+# Generated data (downloads and derived datasets)
+chats/
+chat.json
 messages.txt
 messages_deduped.txt
 model.json
 *.pt
-chats/
 
 # Editor / OS
 .DS_Store

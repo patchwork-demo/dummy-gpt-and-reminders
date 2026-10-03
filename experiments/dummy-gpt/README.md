@@ -167,3 +167,42 @@ Notes:
 - `chat-message-body-to-txt.py` only uses the `comments[].message.body` field of
   `chat.json`, so the merge metadata (which keeps the first VOD's `video` block) does
   not matter for training.
+
+## Growing the dataset
+
+`chats/` is the source of truth (one JSON per VOD). `chat.json`, `messages.txt` and
+`messages_deduped.txt` are always rebuilt from it, so growing the dataset is
+incremental and safe to re-run:
+
+```sh
+./grow-dataset.sh new-links.txt     # add a batch, then download + rebuild + stats
+./grow-dataset.sh                   # no new links: just re-download and rebuild
+```
+
+`grow-dataset.sh` runs the whole chain in one go: append new links -> download the
+missing chats -> rebuild `chat.json` -> rebuild the text dataset -> print stats.
+
+Helpers it uses:
+
+- `add-vods.py` — appends VOD ids from files/globs/stdin to the master `vod-urls.txt`,
+  normalizing raw scraped output and skipping ids already present. So the browser
+  output can be passed as-is (leading indexes are ignored):
+  ```sh
+  ./grow-dataset.sh new-links.txt
+  cat new-links.txt | python3 add-vods.py -      # or append only, without rebuilding
+  ```
+- `fetch-twitch-chats.sh` — accepts several files/globs or stdin (`-`) and still skips
+  already-downloaded VODs: `./fetch-twitch-chats.sh links/*.txt`.
+- `dataset-stats.py` — prints docs, characters, vocab, length percentiles and a
+  suggested `--block-size` (p95 rounded up). Use it to pick `--block-size` as the
+  corpus grows.
+
+Typical loop:
+
+```sh
+./grow-dataset.sh new-links.txt          # grow + rebuild + stats
+# copy the suggested --block-size into the training command, then:
+uv run --extra torch dummy-gpt-torch.py \
+    --n-embd 128 --n-layer 3 --block-size 96 \
+    --steps 20000 --batch-size 64 --threads 8
+```

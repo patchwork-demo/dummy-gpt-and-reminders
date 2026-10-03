@@ -3,26 +3,31 @@
 # Download Twitch chat for a list of VODs and merge everything into one chat.json.
 #
 # Usage:
-#   ./fetch-twitch-chats.sh vod-urls.txt
+#   ./fetch-twitch-chats.sh                      # uses vod-urls.txt
+#   ./fetch-twitch-chats.sh urls1.txt urls2.txt  # several files / globs
+#   cat urls.txt | ./fetch-twitch-chats.sh -     # read from stdin
 #
-# Input file (default: vod-urls.txt) contains one URL or bare id per line, e.g.
-#   https://www.twitch.tv/videos/2843228444
-#   2843228444
+# Each input line may be a full URL (".../videos/123") or a bare id; anything else
+# on the line is ignored, so raw scraped output works as-is.
+# Already-downloaded VODs are skipped, so the script is safe to re-run.
 #
 # Config via environment variables:
 #   TWITCH_DOWNLOADER  path to TwitchDownloaderCLI  (default: the Downloads folder)
 #   RAW_DIR            folder for per-VOD files     (default: chats)
 #   OUT                merged output file           (default: chat.json)
-#
-# Already-downloaded VODs are skipped, so the script is safe to re-run.
 
 set -euo pipefail
 
 CLI="${TWITCH_DOWNLOADER:-/home/wowzers/Downloads/TwitchDownloaderCLI-1.56.5-Linux-x64/TwitchDownloaderCLI}"
 RAW_DIR="${RAW_DIR:-chats}"
 OUT="${OUT:-chat.json}"
-INPUT_FILE="${1:-vod-urls.txt}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
+inputs=("$@")
+if [[ ${#inputs[@]} -eq 0 ]]; then
+  inputs=(vod-urls.txt)
+fi
 
 if [[ ! -x "$CLI" ]]; then
   echo "TwitchDownloaderCLI not found or not executable: $CLI" >&2
@@ -30,18 +35,29 @@ if [[ ! -x "$CLI" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$INPUT_FILE" ]]; then
-  echo "Input file not found: $INPUT_FILE" >&2
-  exit 1
-fi
+for f in "${inputs[@]}"; do
+  if [[ "$f" != "-" && ! -f "$f" ]]; then
+    echo "Input file not found: $f" >&2
+    exit 1
+  fi
+done
 
 mkdir -p "$RAW_DIR"
 
-# Extract unique numeric video ids from URLs (".../videos/123") or bare ids.
-ids="$(sed -E 's#/videos/# #g' "$INPUT_FILE" | grep -oE '[0-9]{6,}' | sort -u || true)"
+# Collect unique numeric video ids from URLs (".../videos/123") or bare ids.
+text=""
+for f in "${inputs[@]}"; do
+  if [[ "$f" == "-" ]]; then
+    text+="$(cat)"
+  else
+    text+="$(cat "$f")"
+  fi
+  text+=$'\n'
+done
+ids="$(printf '%s\n' "$text" | sed -E 's#/videos/# #g' | grep -oE '[0-9]{6,}' | sort -u || true)"
 
 if [[ -z "$ids" ]]; then
-  echo "No video ids found in $INPUT_FILE" >&2
+  echo "No video ids found in: ${inputs[*]}" >&2
   exit 1
 fi
 

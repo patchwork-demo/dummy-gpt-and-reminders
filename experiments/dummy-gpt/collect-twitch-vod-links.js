@@ -12,7 +12,7 @@
 //   TwitchDownloaderCLI chatdownload --id 2843228444 -o chat.json
 //   TwitchDownloaderCLI chatdownload --id 2843228444 -o chat.json --collision overwrite
 
-(async () => {
+await (async () => {
   // Scroll the page to trigger lazy loading of more cards.
   // Set SCROLL_PASSES = 0 to disable scrolling and only read what is already loaded.
   const SCROLL_PASSES = 30;
