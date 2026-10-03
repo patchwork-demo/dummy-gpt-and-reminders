@@ -31,7 +31,7 @@ src/
   static/style.css          # app styles
   dummy_gpt/                # unrelated leftover package
 database.db                 # SQLite file (created on first start, gitignored)
-dummy-gpt*.py, *.README.md  # separate experiments, not part of the notes app
+experiments/dummy-gpt/     # separate character-level GPT experiments (see its torch.md)
 ```
 
 ## Run
@@ -67,4 +67,5 @@ wired up.
 
 ## Other
 
+- Character-level GPT experiments live in `experiments/dummy-gpt/` (guide: `torch.md`).
 - `uv` docs: https://docs.astral.sh/uv/getting-started/installation/

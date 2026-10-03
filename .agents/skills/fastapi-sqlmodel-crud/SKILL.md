@@ -69,9 +69,11 @@ All read paths must filter out rows where `deleted_at` is not `None`.
 
 ## Data / scratch scripts
 
-- `chat-message-body-to-txt.py` and `dedupe-messages.py` are standalone scripts
-  with hardcoded relative filenames (`chat.json` -> `messages.txt` ->
-  `messages_deduped.txt`). Run them from the repo root; their outputs are
-  gitignored.
-- `dummy-gpt.py` is a from-scratch autograd/transformer trainer (no external ML
-  deps). Treat it as experimental unless the task targets it specifically.
+- The character-level GPT experiments live in `experiments/dummy-gpt/` and are not
+  part of the notes app; see `experiments/dummy-gpt/torch.md` for the PyTorch variant.
+- `experiments/dummy-gpt/chat-message-body-to-txt.py` and `dedupe-messages.py` are
+  standalone scripts with hardcoded relative filenames (`chat.json` -> `messages.txt`
+  -> `messages_deduped.txt`). Run them from inside `experiments/dummy-gpt/`; their
+  outputs are gitignored.
+- `experiments/dummy-gpt/dummy-gpt.py` is a from-scratch autograd/transformer trainer
+  (no external ML deps). Treat it as experimental unless the task targets it.
