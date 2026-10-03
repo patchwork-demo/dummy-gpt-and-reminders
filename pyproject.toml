@@ -13,6 +13,12 @@ dependencies = [
     "sqlmodel>=0.0.47",
 ]
 
+[project.optional-dependencies]
+torch = [
+    "numpy>=1.26",
+    "torch>=2.4",
+]
+
 [project.scripts]
 dummy-gpt = "dummy_gpt:main"
 

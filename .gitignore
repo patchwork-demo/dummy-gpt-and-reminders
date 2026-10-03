@@ -28,6 +28,9 @@ htmlcov/
 # Generated data (derived from chat.json)
 messages.txt
 messages_deduped.txt
+model.json
+*.pt
+chats/
 
 # Editor / OS
 .DS_Store

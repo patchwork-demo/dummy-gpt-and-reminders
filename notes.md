@@ -1,0 +1,3 @@
+- how to make api requests to my endpoints in alpine js?
+- I want to add lexical js but download page suggests only package manager installation should I go with it or I could go with cdn version?
+- Alembic package for migrations
