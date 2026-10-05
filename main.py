@@ -20,15 +20,19 @@ class MemoBase(SQLModel):
     updated_at: datetime = Field(
         default_factory=utcnow, sa_column_kwargs={"onupdate": utcnow}
     )
-    deleted_at: datetime | None = Field(default=None)
 
 
 class MemoEntity(MemoBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    deleted_at: datetime | None = Field(default=None)
 
 
 class MemoPublic(MemoBase):
-    id: int
+    id: int | None = None
+
+
+class MemoCreate(SQLModel):
+    content: str
 
 
 class MemoUpdate(SQLModel):
@@ -68,16 +72,22 @@ templates = Jinja2Templates(directory="src/templates")
 
 
 @app.get("/")
-def homepage(request: Request) -> Response:
-    return templates.TemplateResponse(request, "index.html")
+async def homepage(request: Request, session: SessionDep) -> Response:
+    result = await session.exec(
+        select(MemoEntity).where(col(MemoEntity.deleted_at).is_(None))
+    )
+    memos = [MemoPublic.model_validate(m).model_dump(mode="json") for m in result.all()]
+    # print(f'memos: {memos}')
+    return templates.TemplateResponse(request, "index.html", {"memos": memos})
 
 
 @app.post("/api/memos/")
-async def create_memo(memo: MemoEntity, session: SessionDep) -> MemoEntity:
-    session.add(memo)
+async def create_memo(memo: MemoCreate, session: SessionDep) -> MemoEntity:
+    memo_db = MemoEntity(**memo.model_dump())
+    session.add(memo_db)
     await session.commit()
-    await session.refresh(memo)
-    return memo
+    await session.refresh(memo_db)
+    return memo_db
 
 
 @app.patch("/api/memos/{memo_id}")

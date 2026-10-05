@@ -1,94 +1,112 @@
-@import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
 @import url("/static/nord.css");
 
 :root {
-    color-scheme: dark;
-    box-sizing: border-box;
+  color-scheme: dark;
+  box-sizing: border-box;
 }
 
 body {
+  display: flex;
+  justify-content: center;
+  min-height: 100dvh;
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+.memos-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-flow: column wrap;
+  gap: 0.2rem;
+
+  .memo-item {
     display: flex;
-    justify-content: center;
-    min-height: 100dvh;
-    margin: 0;
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
 }
 
 .content {
-    width: 100%;
-    max-width: 45rem;
-    min-height: 100dvh;
-    background-color: var(--color-bg-elevated);
-    border: 1px solid var(--color-border);
-    padding: 1rem;
+  width: 100%;
+  max-width: 45rem;
+  min-height: 100dvh;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  padding: 1rem;
 }
 
 .new-note-field {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    color: var(--color-text);
-    background-color: var(--color-bg);
-    border: 1px solid var(--color-border);
-    padding: 0.25rem;
-    outline: none;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  padding: 0.25rem;
+  outline: none;
 }
 
 .new-note-field input {
-    flex: 1;
-    min-width: 0;
-    padding: 0.4rem 0.5rem;
-    color: inherit;
-    font: inherit;
-    background-color: transparent;
-    border: none;
-    outline: none;
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  color: inherit;
+  font: inherit;
+  background-color: transparent;
+  border: none;
+  outline: none;
 }
 
 .new-note-field input::placeholder {
-    color: var(--color-text-subtle);
+  color: var(--color-text-subtle);
 }
 
 .new-note-field:focus-within {
-    border-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .add-note-button {
-    color: var(--color-text);
-    background-color: var(--color-tertiary);
-    border: 1px solid var(--color-border);
-    padding: 0.4rem 0.75rem;
-    cursor: pointer;
+  color: var(--color-text);
+  background-color: var(--color-tertiary);
+  border: 1px solid var(--color-border);
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
 }
 
 button:hover,
 button:focus-visible {
-    background-color: var(--color-secondary);
-    color: var(--nord0);
+  background-color: var(--color-secondary);
+  color: var(--nord0);
 }
 
 ul {
-    padding-left: 1.25rem;
-    color: var(--color-text-muted);
+  padding-left: 1.25rem;
+  color: var(--color-text-muted);
 }
 
 li {
-    border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 /* Error / warning / success states */
 .error {
-    color: var(--color-error);
+  color: var(--color-error);
 }
 
 .warning {
-    color: var(--color-warning);
+  color: var(--color-warning);
 }
 
 .success {
-    color: var(--color-success);
+  color: var(--color-success);
 }
 
 .ubuntu-light {

@@ -1,49 +1,42 @@
+<!DOCTYPE html>
 <html>
-    <head>
-        <script
-            defer
-            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
-        ></script>
-        <title>🍤 Notes app LMAO</title>
-        <link rel="stylesheet" href="/static/style.css" />
-    </head>
-    <body class="ubuntu-regular">
-        <div
-            class="content"
-            x-data="{
-         notes: {},
-         new_note: '',
-         addNote() {
-            const id = new Date().toISOString();
-            this.notes[id] = {
-             value: this.new_note,
-            }
-            this.new_note = '';
-         },
-         deleteNote(id) {
-            delete this.notes[id]
-         }
-        }"
-        >
-            <div class="new-note-field">
-                <input
-                    type="text"
-                    x-model="new_note"
-                    name="new_note"
-                    minlength="1"
-                    placeholder="Сюда вводи текст заметки! 🥵"
-                    @keyup.enter="addNote"
-                />
-                <button class="add-note-button" @click="addNote">🍤</button>
-            </div>
-            <ul>
-                <template x-for="(value, index) in notes" :key="index">
-                    <li>
-                        <span x-text="value.value"></span>
-                        <button @click="deleteNote(index)">Del</button>
-                    </li>
-                </template>
-            </ul>
-        </div>
-    </body>
+  <head>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    {% include "partials/notes_component.html" %}
+    <title>🍤 Notes app LMAO</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body class="ubuntu-regular">
+    <!--<div x-data="{ label: 'Hello' }" x-effect="console.log(label)">
+      <button @click="label += ' World!'">Change Message</button>
+    </div>-->
+    <div class="content" x-data='notes({{ memos | tojson }})'>
+      <div class="new-note-field">
+        <input
+          type="text"
+          x-model="new_note"
+          name="new_note"
+          minlength="1"
+          placeholder="Сюда вводи текст заметки! 🥵"
+          @keyup.enter="addNote"
+        />
+        <button class="add-note-button" @click="addNote">🍤</button>
+      </div>
+
+      <p x-show="loading">Loading...</p>
+      <p class="error" x-show="error" x-text="error"></p>
+
+      <div class="memos-list">
+        <template x-for="memo in notes" :key="memo.id">
+          <div class="memo-item">
+            <span x-text="memo.content"></span>
+            <button @click="deleteNote(memo.id)">Del</button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </body>
 </html>

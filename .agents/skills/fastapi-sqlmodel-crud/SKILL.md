@@ -23,13 +23,18 @@ endpoints, models, and templates.
 Define models as separate classes; do not reuse the table model as the request
 or response schema:
 
-- `<Name>Base(SQLModel)` — shared fields (`content` is indexed; carry
-  `created_at`, `updated_at`, `deleted_at`).
-- `<Name>Entity(<Name>Base, table=True)` — adds `id: int | None = Field(default=None, primary_key=True)`.
-- `<Name>Public(<Name>Base)` — the response shape (adds `id: int`).
-- `<Name>Update(SQLModel)` — partial-update payload.
+- `<Name>Base(SQLModel)` — fields shared by the stored row and the public
+  read schema (`content` is indexed; carry `created_at` and `updated_at`).
+- `<Name>Entity(<Name>Base, table=True)` — adds `id: int | None = Field(default=None, primary_key=True)` and any persistence-only fields, notably the soft-delete `deleted_at`.
+- `<Name>Public(<Name>Base)` — the response shape (adds `id: int | None = None` so it can be built from an un-flushed entity; persisted responses always carry the id); it must not expose persistence-only fields such as `deleted_at`.
+- `<Name>Create(SQLModel)` — create payload; standalone (does not inherit
+  `Base`), client-writable fields only.
+- `<Name>Update(SQLModel)` — partial-update payload; standalone, fields optional.
 
-Timestamps come from the module-level `utcnow()` helper (`datetime.now(UTC)`).
+Storage and read schemas (`Entity`, `Public`) derive from `Base`; request
+schemas (`Create`, `Update`) are standalone so a client can never set
+server-managed fields. Timestamps come from the module-level `utcnow()` helper
+(`datetime.now(UTC)`).
 
 ## Endpoint pattern
 

@@ -1,0 +1,61 @@
+{# Shared Alpine component for the notes UI. Include once per page in `head`
+tag, then use x-data="notes" on any element. #}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("notes", (initial = []) => ({
+      notes: initial,
+      new_note: "",
+      loading: false,
+      error: null,
+      // Alpine calls init() automatically on mount.
+      async init() {
+        console.log(this.notes)
+        if (this.notes.length > 0) return;
+        await this.loadNotes();
+      },
+      async loadNotes() {
+        this.loading = true;
+        this.error = null;
+        try {
+          const res = await fetch("/api/memos");
+          if (!res.ok) throw new Error(`Load failed: ${res.status}`);
+          this.notes = await res.json();
+        } catch (e) {
+          this.error = e.message;
+        } finally {
+          this.loading = false;
+        }
+      },
+      async addNote() {
+        const content = this.new_note.trim();
+        if (!content) return;
+        this.error = null;
+        try {
+          const res = await fetch("/api/memos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content }),
+          });
+          if (!res.ok) throw new Error(`Save failed: ${res.status}`);
+          const memo = await res.json();
+          this.notes.push(memo);
+          this.new_note = "";
+        } catch (e) {
+          this.error = e.message;
+        }
+      },
+      async deleteNote(id) {
+        this.error = null;
+        try {
+          const res = await fetch(`/api/memos/${id}`, {
+            method: "DELETE",
+          });
+          if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+          this.notes = this.notes.filter((m) => m.id !== id);
+        } catch (e) {
+          this.error = e.message;
+        }
+      },
+    }));
+  });
+</script>
