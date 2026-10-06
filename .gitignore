@@ -28,8 +28,7 @@ htmlcov/
 # Generated data (downloads and derived datasets)
 chats/
 chat.json
-messages.txt
-messages_deduped.txt
+messages*.txt
 model.json
 *.pt
 
