@@ -238,3 +238,63 @@ Notes:
 - The tokenizer is trained during `train` and saved **inside the checkpoint**, so
   `infer` rebuilds it automatically; there are no extra files to manage.
 - Needs the `tokenizers` package, which is already part of the `--extra torch` group.
+
+## Shitposting bot setup
+
+Goal: chaotic, funny messages — low loss is **not** wanted, and a slightly
+under-trained model is actually funnier. The strict preprocessing strips exactly what makes chat funny (case, emoji, spam), so use the relaxed mode.
+
+1. Build a relaxed corpus (keeps case, emoji, urls, mentions and duplicates):
+
+```sh
+python3 dedupe-messages.py --shitpost --output messages_shitpost.txt
+```
+
+2. Train (small and short is fine):
+
+```sh
+uv run --extra torch dummy-gpt-bpe.py \
+    --data messages_shitpost.txt \
+    --model shitpost.pt \
+    --n-embd 128 --n-layer 3 --block-size 48 \
+    --vocab-size 2000 \
+    --steps 3000 --batch-size 128 --threads 8
+```
+
+3. Generate with chaotic sampling and a prompt:
+
+```sh
+uv run --extra torch dummy-gpt-bpe.py \
+    --mode infer --model shitpost.pt \
+    --prompt "ку" \
+    --temperature 1.0 --top-k 40 --top-p 0.95 --repetition-penalty 1.2
+```
+
+Sampling / prompt flags (available in both `dummy-gpt-bpe.py` and `dummy-gpt-torch.py`):
+
+| Flag | Default | Effect |
+|---|---|---|
+| `--temperature` | 0.7 (bpe) / 0.5 (char) | higher = more chaos |
+| `--top-k` | `0` (off) | keep only the K most likely tokens |
+| `--top-p` | `1.0` (off) | nucleus: keep tokens up to this cumulative probability |
+| `--repetition-penalty` | `1.0` (off) | >1 discourages loops like `wat wat wat` |
+| `--prompt` | `""` | seed the generation with this text |
+| `--data` | `messages_deduped.txt` | training corpus (`messages_shitpost.txt` for chaos) |
+
+`dedupe-messages.py` flags: `--input`, `--output`, `--shitpost`.
+
+The char model (`dummy-gpt-torch.py`) tends to be more chaotic than BPE — worth trying
+both on `messages_shitpost.txt` and comparing the samples.
+
+Random-prompt wrapper — pick a random word or phrase and generate from it:
+
+```sh
+python3 random-prompt.py --model shitpost.pt \
+    --temperature 1.0 --top-k 40 --top-p 0.95 --repetition-penalty 1.2
+```
+
+It reads `messages_deduped.txt` (override with `--corpus`), picks a random word — or,
+with `--phrase-prob` (default `0.5`), a random 2–5 word phrase — prints it, then runs
+`uv run --extra torch <gen> --mode infer --prompt <text>` and forwards every flag after
+its own (`--corpus`, `--gen`, `--min-len`, `--max-len`, `--phrase-prob`,
+`--phrase-min-words`, `--phrase-max-words`) straight to the generator.

@@ -2,6 +2,7 @@ import argparse
 import math
 import random
 import time
+from pathlib import Path
 
 import torch
 import torch.nn.functional as F
@@ -69,6 +70,36 @@ parser.add_argument(
     "--temperature", type=float, default=0.5, help="sampling temperature for generation"
 )
 parser.add_argument(
+    "--top-k", type=int, default=0, help="keep only the K most likely tokens (0 = off)"
+)
+parser.add_argument(
+    "--top-p",
+    type=float,
+    default=1.0,
+    help="nucleus sampling: keep tokens up to this cumulative probability (1.0 = off)",
+)
+parser.add_argument(
+    "--repetition-penalty",
+    type=float,
+    default=1.0,
+    help="penalize tokens already in the context; >1 discourages loops/echoing (1.0 = off)",
+)
+parser.add_argument(
+    "--min-tokens",
+    type=int,
+    default=0,
+    help="never emit the end token before this many generated tokens (0 = off)",
+)
+parser.add_argument(
+    "--continuation-only",
+    action="store_true",
+    help="print only the generated text, without the prompt",
+)
+parser.add_argument("--prompt", default="", help="seed the generation with this text")
+parser.add_argument(
+    "--data", default="messages_deduped.txt", help="corpus to train on (train only)"
+)
+parser.add_argument(
     "--seed", type=int, default=67, help="random seed (same seed -> same samples)"
 )
 parser.add_argument("--log-every", type=int, default=100, help="print a log line every N steps")
@@ -105,7 +136,7 @@ print(f"device: {device} | threads: {torch.get_num_threads()}")
 # In train mode we build the vocabulary from the dataset; in infer mode it comes from the weights file.
 if args.mode == "train":
     # Input dataset `docs`: list[str] of documents (e.g. a dataset of twitch messages)
-    with open("messages_deduped.txt", encoding="utf-8") as f:
+    with open(args.data, encoding="utf-8") as f:
         docs = [line.strip() for line in f if line.strip()]
 
     docs = [d.lower() for d in docs]
@@ -123,6 +154,11 @@ if args.mode == "train":
     }
     tie_weights = args.tie_weights
 else:
+    if not Path(args.model).exists():
+        raise SystemExit(
+            f"weights file not found: {args.model}\n"
+            "Train first (train mode saves the checkpoint), or point --model at an existing one."
+        )
     ckpt = torch.load(args.model, map_location="cpu")
     uchars = ckpt["uchars"]
     hparams = ckpt["hparams"]
@@ -341,21 +377,50 @@ else:
     model.load_state_dict(ckpt["state_dict"])
 
 
+def sample_next_token(logits, context, generated_count):
+    """Repetition penalty over the context, min length, top-k/top-p, temperature."""
+    logits = logits.clone()
+    if args.repetition_penalty != 1.0:
+        for token_id in set(context):
+            if logits[token_id] > 0:
+                logits[token_id] /= args.repetition_penalty
+            else:
+                logits[token_id] *= args.repetition_penalty
+    if generated_count < args.min_tokens:
+        logits[BOS] = float("-inf")  # do not end the message too early
+    logits = logits / args.temperature
+    if args.top_k > 0:
+        k = min(args.top_k, logits.numel())
+        threshold = torch.topk(logits, k).values[-1]
+        logits = logits.masked_fill(logits < threshold, float("-inf"))
+    if args.top_p < 1.0:
+        sorted_logits, sorted_idx = torch.sort(logits, descending=True)
+        cumulative = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+        remove = cumulative > args.top_p
+        remove[1:] = remove[:-1].clone()
+        remove[0] = False
+        sorted_logits = sorted_logits.masked_fill(remove, float("-inf"))
+        logits = torch.empty_like(logits).scatter_(0, sorted_idx, sorted_logits)
+    probs = F.softmax(logits, dim=-1)
+    return int(torch.multinomial(probs, num_samples=1).item())
+
+
 # Inference: may the model babble back to us
 torch.manual_seed(args.seed)  # reproducible and identical after train or via `--mode infer`
 model.eval()
+prompt_ids = [char_to_id[ch] for ch in args.prompt if ch in char_to_id]
 print("--- inference (new, hallucinated names) ---")
 for sample_idx in range(args.samples):
-    idx = torch.tensor([[BOS]], device=device)
-    sample = []
+    token_ids = [BOS] + prompt_ids
+    generated = []
     with torch.no_grad():
         for _ in range(block_size):
-            logits = model(idx[:, -block_size:])[:, -1, :vocab_size] / args.temperature
-            probs = F.softmax(logits, dim=-1)
-            next_id = torch.multinomial(probs, num_samples=1)
-            token_id = int(next_id.item())
-            if token_id == BOS:
+            idx = torch.tensor([token_ids[-block_size:]], device=device)
+            logits = model(idx)[0, -1, :vocab_size]  # exclude PAD
+            next_id = sample_next_token(logits, token_ids, len(generated))
+            if next_id == BOS:
                 break
-            sample.append(uchars[token_id])
-            idx = torch.cat([idx, next_id], dim=1)
-    print(f"sample {sample_idx + 1:2d}: {''.join(sample)}")
+            token_ids.append(next_id)
+            generated.append(next_id)
+    shown = generated if args.continuation_only else token_ids[1:]
+    print(f"sample {sample_idx + 1:2d}: {''.join(uchars[i] for i in shown)}")

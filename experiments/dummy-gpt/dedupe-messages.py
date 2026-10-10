@@ -1,17 +1,15 @@
+import argparse
 import re
 
-# Keep only lowercase Latin/Cyrillic letters, digits, spaces and common punctuation.
-# Everything else is dropped: emoji, zero-width chars (e.g. \u034f), em/en dashes,
-# box-drawing and other rare symbols that would just add noise to the tokenizer.
+# Strict (default) preprocessing: lowercase, normalize mentions, keep only a whitelist
+# of characters and drop duplicate lines.
 KEEP = re.compile(r"[^a-zа-яё0-9 .,!?:;'\"()\-+=*/@#%&\[\]<>_^]")
 
-# Twitch usernames (Latin letters, digits, underscore) after an @. Replace the whole
-# mention with a constant token so the model learns "a mention goes here" without
-# memorizing real handles or bloating the vocabulary with one-off Latin strings.
+# Twitch usernames (Latin letters, digits, underscore) after an @.
 MENTION = re.compile(r"@[a-z0-9_]+")
 
 
-def clean(line: str) -> str:
+def clean_strict(line: str) -> str:
     line = line.strip().lower()
     if "http" in line:  # drop messages that are mostly long Discord URLs
         return ""
@@ -19,18 +17,50 @@ def clean(line: str) -> str:
     return KEEP.sub("", line)
 
 
-with open("messages.txt", encoding="utf-8") as f:
-    lines = f.readlines()
+def clean_shitpost(line: str) -> str:
+    # Keep almost everything: case (CAPS = shouting), emoji, urls, mentions and
+    # repeated spam. Only tidy whitespace.
+    return line.strip().replace("\t", " ")
 
-seen = set()
-unique_lines = []
-for line in lines:
-    line_clean = clean(line)
-    if line_clean and line_clean not in seen:
-        seen.add(line_clean)
-        unique_lines.append(line_clean + "\n")
 
-with open("messages_deduped.txt", "w", encoding="utf-8") as f:
-    f.writelines(unique_lines)
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Clean messages.txt into a training corpus."
+    )
+    parser.add_argument("--input", default="messages.txt", help="raw messages file")
+    parser.add_argument(
+        "--output", default="messages_deduped.txt", help="cleaned output file"
+    )
+    parser.add_argument(
+        "--shitpost",
+        action="store_true",
+        help="keep case, emoji, urls and duplicates (chaotic data for a shitposting bot)",
+    )
+    args = parser.parse_args()
 
-print(f"Source length: {len(lines)}; Output length: {len(unique_lines)}")
+    with open(args.input, encoding="utf-8") as f:
+        lines = f.readlines()
+
+    clean = clean_shitpost if args.shitpost else clean_strict
+    dedupe = not args.shitpost  # keep repeats/spam in shitpost mode
+
+    seen = set()
+    out = []
+    for line in lines:
+        cleaned = clean(line)
+        if not cleaned:
+            continue
+        if dedupe:
+            if cleaned in seen:
+                continue
+            seen.add(cleaned)
+        out.append(cleaned + "\n")
+
+    with open(args.output, "w", encoding="utf-8") as f:
+        f.writelines(out)
+
+    print(f"Source length: {len(lines)}; Output length: {len(out)}")
+
+
+if __name__ == "__main__":
+    main()
