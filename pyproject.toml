@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "aiosqlite>=0.22.1",
+    "alembic>=1.20.0",
     "fastapi[standard]>=0.142.2",
     "sqlmodel>=0.0.47",
 ]
@@ -26,3 +27,6 @@ dummy-gpt = "dummy_gpt:main"
 [build-system]
 requires = ["uv_build>=0.12.21,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.ruff.lint.isort]
+known-third-party = ["alembic"]

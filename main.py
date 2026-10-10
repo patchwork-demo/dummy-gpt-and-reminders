@@ -1,7 +1,11 @@
+import asyncio
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Annotated
 
+from alembic import command
+from alembic.config import Config
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -48,11 +52,6 @@ connect_args = {"check_same_thread": False}
 engine = create_async_engine(sqlite_url, connect_args=connect_args)
 
 
-async def create_db_and_tables():
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-
-
 async def get_session():
     async with AsyncSession(engine) as session:
         yield session
@@ -61,9 +60,26 @@ async def get_session():
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def run_migrations() -> None:
+    """Bring the database schema up to date (Alembic ``upgrade head``).
+
+    Alembic's online mode drives its own asyncio loop (see ``alembic/env.py``),
+    so this synchronous entry point must run off the event loop -- call it via
+    ``asyncio.to_thread``.
+    """
+    config = Config(str(BASE_DIR / "alembic.ini"))
+    command.upgrade(config, "head")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await create_db_and_tables()
+    # Applies pending migrations on startup for a "just run the server" dev
+    # experience. For multi-replica deploys, run `alembic upgrade head` as a
+    # separate deploy step instead to avoid concurrent migration attempts.
+    await asyncio.to_thread(run_migrations)
     yield
     await engine.dispose()
 
