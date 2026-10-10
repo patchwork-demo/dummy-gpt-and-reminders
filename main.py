@@ -16,6 +16,7 @@ def utcnow() -> datetime:
 
 class MemoBase(SQLModel):
     content: str = Field(index=True)
+    is_completed: bool = Field(default=False)
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(
         default_factory=utcnow, sa_column_kwargs={"onupdate": utcnow}
@@ -37,6 +38,7 @@ class MemoCreate(SQLModel):
 
 class MemoUpdate(SQLModel):
     content: str = ""
+    is_completed: bool
 
 
 sqlite_file_name = "database.db"
