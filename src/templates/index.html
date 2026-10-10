@@ -13,7 +13,7 @@
     <!--<div x-data="{ label: 'Hello' }" x-effect="console.log(label)">
       <button @click="label += ' World!'">Change Message</button>
     </div>-->
-    <div class="content" x-data='notes({{ memos | tojson }})'>
+    <div class="content" x-cloak x-data='notes({{ memos | tojson }})'>
       <div class="new-note-field">
         <input
           type="text"

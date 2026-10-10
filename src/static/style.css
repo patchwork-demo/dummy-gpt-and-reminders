@@ -6,6 +6,12 @@
   box-sizing: border-box;
 }
 
+/* Hide Alpine components until they are mounted to avoid a flash of
+   unstyled/raw content before the CDN script initializes. */
+[x-cloak] {
+  display: none !important;
+}
+
 body {
   display: flex;
   justify-content: center;
