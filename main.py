@@ -41,8 +41,8 @@ class MemoCreate(SQLModel):
 
 
 class MemoUpdate(SQLModel):
-    content: str = ""
-    is_completed: bool
+    content: str | None = None
+    is_completed: bool | None = None
 
 
 sqlite_file_name = "database.db"
@@ -115,7 +115,7 @@ async def update_memo(
     memo_db = await session.get(MemoEntity, memo_id)
     if not memo_db:
         raise HTTPException(status_code=404, detail="Memo not found")
-    memo_data = memo.model_dump(exclude_unset=True)
+    memo_data = memo.model_dump(exclude_unset=True, exclude_none=True)
     memo_db.sqlmodel_update(memo_data)
     session.add(memo_db)
     await session.commit()
