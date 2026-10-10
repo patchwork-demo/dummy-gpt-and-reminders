@@ -44,6 +44,20 @@ tag, then use x-data="notes" on any element. #}
           this.error = e.message;
         }
       },
+      async toggleNote(memo) {
+        this.error = null;
+        try {
+          const res = await fetch(`/api/memos/${memo.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ is_completed: memo.is_completed }),
+          });
+          if (!res.ok) throw new Error(`Update failed: ${res.status}`);
+        } catch (e) {
+          memo.is_completed = !memo.is_completed;
+          this.error = e.message;
+        }
+      },
       async deleteNote(id) {
         this.error = null;
         try {
