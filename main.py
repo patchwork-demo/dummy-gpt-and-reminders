@@ -101,7 +101,7 @@ async def homepage(request: Request, session: SessionDep) -> Response:
     return templates.TemplateResponse(request, "index.html", {"memos": memos})
 
 
-@app.post("/api/memos/")
+@app.post("/api/memos")
 async def create_memo(memo: MemoCreate, session: SessionDep) -> MemoEntity:
     memo_db = MemoEntity(**memo.model_dump())
     session.add(memo_db)
@@ -125,7 +125,7 @@ async def update_memo(
     return memo_db
 
 
-@app.get("/api/memos/")
+@app.get("/api/memos")
 async def read_memos(
     session: SessionDep,
     offset: int = 0,
