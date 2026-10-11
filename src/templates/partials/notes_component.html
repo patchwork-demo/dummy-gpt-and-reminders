@@ -9,7 +9,6 @@ tag, then use x-data="notes" on any element. #}
       error: null,
       // Alpine calls init() automatically on mount.
       async init() {
-        console.log(this.notes)
         if (this.notes.length > 0) return;
         await this.loadNotes();
       },
