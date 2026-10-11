@@ -37,6 +37,11 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+
+    span {
+      flex: 1;
+      min-width: 0;
+    }
   }
 }
 
