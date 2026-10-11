@@ -37,7 +37,7 @@ tag, then use x-data="notes" on any element. #}
           });
           if (!res.ok) throw new Error(`Save failed: ${res.status}`);
           const memo = await res.json();
-          this.notes.push(memo);
+          this.notes.unshift(memo);
           this.new_note = "";
         } catch (e) {
           this.error = e.message;

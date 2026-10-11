@@ -92,7 +92,9 @@ templates = Jinja2Templates(directory="src/templates")
 @app.get("/")
 async def homepage(request: Request, session: SessionDep) -> Response:
     result = await session.exec(
-        select(MemoEntity).where(col(MemoEntity.deleted_at).is_(None))
+        select(MemoEntity)
+        .where(col(MemoEntity.deleted_at).is_(None))
+        .order_by(col(MemoEntity.created_at).desc())
     )
     memos = [MemoPublic.model_validate(m).model_dump(mode="json") for m in result.all()]
     # print(f'memos: {memos}')
