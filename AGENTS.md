@@ -25,3 +25,5 @@
 - `main.py` - FastAPI app, models, and all routes
 - `src/templates`, `src/static` - Jinja2 + Alpine.js UI
 - `experiments/dummy-gpt/` - separate GPT experiments (own `README.md`)
+- `experiments/sleep-timer/` - Windows sleep timer with media pause; Windows-only,
+  needs `uv run --extra sleep-timer` (own `README.md`)

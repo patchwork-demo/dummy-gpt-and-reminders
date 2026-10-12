@@ -20,6 +20,15 @@ torch = [
     "tokenizers>=0.15",
     "torch>=2.4",
 ]
+# Windows-only: System Media Transport Controls, used by
+# experiments/sleep-timer/sleep-timer-app-win.py to pause playback before
+# suspending. Kept out of the default deps so `uv sync` still works on
+# macOS/Linux.
+sleep-timer = [
+    "winrt-windows-foundation>=3.2.1",
+    "winrt-windows-foundation-collections>=3.2.1",
+    "winrt-windows-media-control>=3.2.1",
+]
 
 [project.scripts]
 dummy-gpt = "dummy_gpt:main"
