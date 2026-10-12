@@ -1,11 +1,9 @@
 """Windows sleep timer with a media pause before the machine suspends.
 
-Run from the project root with the Windows-only media extra, so playback can be
-paused first:
+Windows-only. Run from the project root with the sleep-timer extra, which
+provides both the WinRT media controls and the Sun Valley ttk theme:
 
     uv run --extra sleep-timer python experiments/sleep-timer/sleep-timer-app-win.py
-
-Without it the timer still works, it just leaves playing media alone.
 """
 
 import asyncio
@@ -14,29 +12,37 @@ import queue
 import sys
 import threading
 import tkinter as tk
+import winreg
 from tkinter import messagebox, ttk
 
-# Sun Valley theme: gives the ttk widgets a native Windows 11 look and, unlike
-# the classic tk widgets, an actual dark mode. Optional, so the app still runs
-# (in the default light theme) if the extra is not installed.
+# System Media Transport Controls: the same API the hardware media keys use,
+# plus the Sun Valley theme below. Both come from the sleep-timer extra, so a
+# missing extra is reported as one clear instruction instead of a bare
+# ImportError. The two WinRT names sit in separate import statements because
+# they are aliased.
 try:
     import sv_ttk
-except ImportError:
-    sv_ttk = None
+    from winrt.windows.media.control import (
+        GlobalSystemMediaTransportControlsSessionManager as MediaManager,
+    )
+    from winrt.windows.media.control import (
+        GlobalSystemMediaTransportControlsSessionPlaybackStatus as PlaybackStatus,
+    )
+except ImportError as exc:
+    raise SystemExit(
+        "Missing sleep-timer dependencies. Run with:\n"
+        "    uv run --extra sleep-timer python "
+        "experiments/sleep-timer/sleep-timer-app-win.py"
+    ) from exc
 
 
 def windows_apps_use_dark() -> bool:
     """True if Windows is set to dark app mode, else False.
 
-    Reads the same registry value the Settings app writes under
-    Personalize: `AppsUseLightTheme` is 1 for light and 0 for dark. Any
-    missing key/value (or a non-Windows host, where winreg does not exist)
-    falls back to dark, matching the app's default before this was added.
+    Reads the same registry value the Settings app writes under Personalize:
+    `AppsUseLightTheme` is 1 for light and 0 for dark. A missing key/value
+    falls back to dark.
     """
-    try:
-        import winreg
-    except ImportError:
-        return True
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
@@ -47,18 +53,6 @@ def windows_apps_use_dark() -> bool:
         return True
     return light == 0
 
-# System Media Transport Controls: the same API the hardware media keys use.
-# Optional, so the timer is still usable if the extra is not installed. The two
-# names sit in separate import statements because they are aliased.
-try:
-    from winrt.windows.media.control import (
-        GlobalSystemMediaTransportControlsSessionManager as MediaManager,
-    )
-    from winrt.windows.media.control import (
-        GlobalSystemMediaTransportControlsSessionPlaybackStatus as PlaybackStatus,
-    )
-except ImportError:
-    MediaManager = None
 
 # Queue payload asking the Tk thread to suspend the machine.
 SUSPEND = object()
@@ -105,10 +99,8 @@ class SleepTimerApp:
         # _sync_theme. classic tk.* widgets would ignore this; only ttk ones are
         # themed.
         self._closing = False
-        self._current_theme = None
-        if sv_ttk is not None:
-            self._current_theme = self._detect_theme()
-            sv_ttk.set_theme(self._current_theme)
+        self._current_theme = self._detect_theme()
+        sv_ttk.set_theme(self._current_theme)
 
         self.timer_thread = None
         self.is_running = False
@@ -175,7 +167,7 @@ class SleepTimerApp:
         the app was in the background. Restyling only on an actual change
         avoids needless style rebuilds every tick.
         """
-        if self._closing or sv_ttk is None:
+        if self._closing:
             return
         theme = self._detect_theme()
         if theme != self._current_theme:
@@ -307,14 +299,6 @@ class SleepTimerApp:
         thread: a wedged asyncio/WinRT call here would freeze the UI and hold
         up the suspend with it.
         """
-        if MediaManager is None:
-            print(
-                "Media pause unavailable: run with `uv run --extra sleep-timer "
-                "python experiments/sleep-timer/sleep-timer-app-win.py`",
-                file=sys.stderr,
-            )
-            return
-
         finished = threading.Event()
 
         def worker():
