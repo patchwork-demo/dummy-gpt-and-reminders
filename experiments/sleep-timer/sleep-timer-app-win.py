@@ -14,7 +14,38 @@ import queue
 import sys
 import threading
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
+
+# Sun Valley theme: gives the ttk widgets a native Windows 11 look and, unlike
+# the classic tk widgets, an actual dark mode. Optional, so the app still runs
+# (in the default light theme) if the extra is not installed.
+try:
+    import sv_ttk
+except ImportError:
+    sv_ttk = None
+
+
+def windows_apps_use_dark() -> bool:
+    """True if Windows is set to dark app mode, else False.
+
+    Reads the same registry value the Settings app writes under
+    Personalize: `AppsUseLightTheme` is 1 for light and 0 for dark. Any
+    missing key/value (or a non-Windows host, where winreg does not exist)
+    falls back to dark, matching the app's default before this was added.
+    """
+    try:
+        import winreg
+    except ImportError:
+        return True
+    try:
+        with winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+        ) as key:
+            light, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+    except OSError:
+        return True
+    return light == 0
 
 # System Media Transport Controls: the same API the hardware media keys use.
 # Optional, so the timer is still usable if the extra is not installed. The two
@@ -60,12 +91,24 @@ class SleepTimerApp:
     # Bound on waiting for the media pause, so a hung WinRT call cannot block
     # the suspend forever.
     MEDIA_PAUSE_TIMEOUT_S = 3.0
+    # How often to re-read the Windows app-mode setting, so a change made in
+    # Settings while this is open is picked up without a restart.
+    THEME_POLL_MS = 2000
 
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("Sleep Timer")
         self.root.geometry("300x300")
         self.root.resizable(False, False)
+
+        # Match the Windows "app mode" setting, then keep following it live via
+        # _sync_theme. classic tk.* widgets would ignore this; only ttk ones are
+        # themed.
+        self._closing = False
+        self._current_theme = None
+        if sv_ttk is not None:
+            self._current_theme = self._detect_theme()
+            sv_ttk.set_theme(self._current_theme)
 
         self.timer_thread = None
         self.is_running = False
@@ -81,31 +124,31 @@ class SleepTimerApp:
         self.status_queue = queue.Queue()
 
         # Minutes input field
-        tk.Label(root, text="Time until sleep in mins:", font=("Segoe UI", 10)).pack(
+        ttk.Label(root, text="Time until sleep in mins:", font=("Segoe UI", 10)).pack(
             pady=(15, 5)
         )
-        self.minutes_entry = tk.Entry(
+        self.minutes_entry = ttk.Entry(
             root, font=("Segoe UI", 12), justify="center", width=10
         )
         self.minutes_entry.insert(0, "30")
         self.minutes_entry.pack(pady=5)
 
         # Countdown
-        self.label_status = tk.Label(
+        self.label_status = ttk.Label(
             root, text="Timer is not launched", font=("Segoe UI", 11, "bold")
         )
         self.label_status.pack(pady=10)
 
         # Control buttons
-        btn_frame = tk.Frame(root)
+        btn_frame = ttk.Frame(root)
         btn_frame.pack(pady=5)
 
-        self.btn_start = tk.Button(
+        self.btn_start = ttk.Button(
             btn_frame, text="Start", command=self.start_timer, width=10
         )
         self.btn_start.pack(side=tk.LEFT, padx=5)
 
-        self.btn_stop = tk.Button(
+        self.btn_stop = ttk.Button(
             btn_frame,
             text="Cancel",
             command=self.stop_timer,
@@ -118,6 +161,27 @@ class SleepTimerApp:
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self._pump_status()
+        self._sync_theme()
+
+    def _detect_theme(self) -> str:
+        """Name of the sv_ttk theme matching the Windows app-mode setting."""
+        return "dark" if windows_apps_use_dark() else "light"
+
+    def _sync_theme(self):
+        """Re-apply the theme if the Windows app-mode setting changed.
+
+        Polled from the Tk thread rather than driven by WM_SETTINGCHANGE: no
+        window-procedure subclassing, and it also catches changes made while
+        the app was in the background. Restyling only on an actual change
+        avoids needless style rebuilds every tick.
+        """
+        if self._closing or sv_ttk is None:
+            return
+        theme = self._detect_theme()
+        if theme != self._current_theme:
+            self._current_theme = theme
+            sv_ttk.set_theme(theme)
+        self.root.after(self.THEME_POLL_MS, self._sync_theme)
 
     def start_timer(self):
         try:
@@ -203,6 +267,8 @@ class SleepTimerApp:
         The widgets are not reset first: they are about to be destroyed, so
         only the teardown half of _reset_idle is meaningful here.
         """
+        # Stops the theme poll from rescheduling after the interpreter is gone.
+        self._closing = True
         self._stop_worker()
         self.root.destroy()
 

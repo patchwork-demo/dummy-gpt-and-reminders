@@ -25,6 +25,7 @@ torch = [
 # suspending. Kept out of the default deps so `uv sync` still works on
 # macOS/Linux.
 sleep-timer = [
+    "sv-ttk>=2.6.1",
     "winrt-windows-foundation>=3.2.1",
     "winrt-windows-foundation-collections>=3.2.1",
     "winrt-windows-media-control>=3.2.1",
