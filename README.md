@@ -30,7 +30,6 @@ src/
   templates/index.html      # Jinja2 page wired with Alpine.js
   static/nord.css           # theme
   static/style.css          # app styles
-  dummy_gpt/                # unrelated leftover package
 alembic/                    # Alembic migrations (schema is owned by Alembic)
 database.db                 # SQLite file (created by migrations, gitignored)
 experiments/dummy-gpt/     # separate character-level GPT experiments (see its README.md)

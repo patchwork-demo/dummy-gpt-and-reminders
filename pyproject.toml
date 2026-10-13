@@ -31,12 +31,5 @@ sleep-timer = [
     "winrt-windows-media-control>=3.2.1",
 ]
 
-[project.scripts]
-dummy-gpt = "dummy_gpt:main"
-
-[build-system]
-requires = ["uv_build>=0.12.21,<0.13.0"]
-build-backend = "uv_build"
-
 [tool.ruff.lint.isort]
 known-third-party = ["alembic"]
