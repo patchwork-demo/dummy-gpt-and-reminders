@@ -10,10 +10,7 @@
     <title>Carapace</title>
     <link rel="stylesheet" href="/static/style.css" />
   </head>
-  <body class="ubuntu-regular">
-    <!--<div x-data="{ label: 'Hello' }" x-effect="console.log(label)">
-      <button @click="label += ' World!'">Change Message</button>
-    </div>-->
+  <body>
     <div class="content" x-cloak x-data='notes({{ memos | tojson }})'>
       <div class="new-note-field">
         <input

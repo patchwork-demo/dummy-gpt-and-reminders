@@ -29,22 +29,27 @@
     --nord14: #a3be8c;
     --nord15: #b48ead;
 
-    /* Semantic tokens (dark ambiance design) */
-    --color-bg: var(--nord0);
-    --color-bg-elevated: var(--nord1);
-    --color-bg-active: var(--nord2);
-    --color-border: var(--nord3);
+    /* Semantic tokens, ambiance-aware via light-dark(light, dark).
+       These resolve against the used `color-scheme` (set to
+       `light dark` on :root in style.css), so consumers can use the
+       tokens directly without wrapping them in light-dark() again. */
+    --color-bg: light-dark(var(--nord5), var(--nord0));
+    --color-bg-elevated: light-dark(var(--nord6), var(--nord1));
+    --color-bg-active: light-dark(var(--nord4), var(--nord2));
+    --color-border: light-dark(var(--nord4), var(--nord3));
 
-    --color-text: var(--nord6);
-    --color-text-muted: var(--nord4);
-    --color-text-subtle: var(--nord3);
+    --color-text: light-dark(var(--nord0), var(--nord6));
+    --color-text-muted: light-dark(var(--nord3), var(--nord4));
+    --color-text-subtle: light-dark(var(--nord4), var(--nord3));
 
-    --color-primary: var(--nord8);
-    --color-secondary: var(--nord9);
-    --color-tertiary: var(--nord10);
-    --color-accent: var(--nord7);
+    /* Frost hues are light; darken them on light backgrounds so they
+       stay legible, and lift the warning hue for contrast. */
+    --color-primary: light-dark(var(--nord10), var(--nord8));
+    --color-secondary: light-dark(var(--nord10), var(--nord9));
+    --color-tertiary: light-dark(var(--nord9), var(--nord10));
+    --color-accent: light-dark(var(--nord7), var(--nord7));
 
-    --color-error: var(--nord11);
-    --color-warning: var(--nord13);
-    --color-success: var(--nord14);
+    --color-error: light-dark(var(--nord11), var(--nord11));
+    --color-warning: light-dark(var(--nord12), var(--nord13));
+    --color-success: light-dark(var(--nord14), var(--nord14));
 }
