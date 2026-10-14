@@ -20,6 +20,17 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: "Ubuntu", system-ui, sans-serif;
+  font-weight: 300;
+  line-height: 1.3;
+}
+
+.content {
+  width: 100%;
+  max-width: 45rem;
+  min-height: 100dvh;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  padding: 1rem 0;
 }
 
 .memos-list {
@@ -29,58 +40,55 @@ body {
   color: inherit;
   display: flex;
   flex-flow: column wrap;
-  gap: 0.2rem;
+  gap: 0.44rem;
 
   .memo-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    border-bottom: none;
+
+    &:not(:has(.completed)) {
+      border-bottom: thick solid var(--color-secondary);
+    }
+    &:has(.completed) {
+      border-bottom: thick solid var(--color-accent);
+    }
+    /* Memo divider: bottom rule inset on the left and flush with the
+       container's right edge (i.e. it spans wider than the padded text). */
+    --divider-gap: 1rem;
+    margin-right: var(--divider-gap);
+    padding-left: var(--divider-gap);
 
     span {
       flex: 1;
       min-width: 0;
+      text-align: justify;
+      text-justify: auto;
     }
 
     .completed {
       text-decoration-line: line-through;
-      text-decoration-thickness: 0.1rem;
-      font-weight: 300;
+      text-decoration-thickness: 0.07rem;
     }
   }
-}
-
-.content {
-  width: 100%;
-  max-width: 45rem;
-  min-height: 100dvh;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  padding: 1rem;
 }
 
 .new-note-field {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  color: var(--color-text);
-  background-color: var(--color-bg);
-  border-top: none;
-  border-bottom: none;
-  border: 1px solid var(--color-border);
-  padding: 0.25rem 0.5rem;
-  outline: none;
+  margin: 0 1rem;
 }
 
 .new-note-field input {
   flex: 1;
   min-width: 0;
-  padding: 0;
+  padding: 0.5rem 0.75rem;
   color: inherit;
   font: inherit;
-  background-color: transparent;
+  background-color: var(--color-bg);
   border: none;
+  border-bottom: 2px solid var(--color-border);
   outline: none;
 }
 
@@ -88,15 +96,17 @@ body {
   color: light-dark(var(--nord3), var(--color-text-subtle));
 }
 
-.new-note-field:focus-within {
-  border-color: var(--color-primary);
+.new-note-field input:focus {
+  border-bottom-color: var(--color-primary);
 }
 
 .add-note-button {
   color: var(--color-text);
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  padding: 0.4rem 0.75rem;
+  background-color: transparent;
+  border: thick solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font: 1rem;
   cursor: pointer;
 }
 
