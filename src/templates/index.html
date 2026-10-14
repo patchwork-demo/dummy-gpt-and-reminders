@@ -30,13 +30,13 @@
       <div class="memos-list">
         <template x-for="memo in notes" :key="memo.id">
           <div class="memo-item">
-            <input
+            <!--<input
               type="checkbox"
               x-model="memo.is_completed"
               @change="toggleNote(memo)"
-            />
-            <span x-text="memo.content"></span>
-            <button @click="deleteNote(memo.id)">Del</button>
+            />-->
+            <span x-text="memo.content" x-bind:class="memo.is_completed ? 'completed' : ''"></span>
+            <!--<button @click="deleteNote(memo.id)">Del</button>-->
           </div>
         </template>
       </div>

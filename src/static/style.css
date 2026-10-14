@@ -38,6 +38,12 @@ body {
       flex: 1;
       min-width: 0;
     }
+
+    .completed {
+      text-decoration-line: line-through;
+      text-decoration-thickness: 0.1rem;
+      font-weight: 300;
+    }
   }
 }
 
