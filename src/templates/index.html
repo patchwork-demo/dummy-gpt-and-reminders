@@ -35,7 +35,10 @@
               x-model="memo.is_completed"
               @change="toggleNote(memo)"
             />-->
-            <span x-text="memo.content" x-bind:class="memo.is_completed ? 'completed' : ''"></span>
+            <span x-text="memo.content"
+              x-bind:class="memo.is_completed ? 'completed' : ''"
+              @click="toggleNote(memo)"
+            ></span>
             <!--<button @click="deleteNote(memo.id)">Del</button>-->
           </div>
         </template>

@@ -49,9 +49,13 @@ tag, then use x-data="notes" on any element. #}
           const res = await fetch(`/api/memos/${memo.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ is_completed: memo.is_completed }),
+            body: JSON.stringify({ is_completed: !memo.is_completed }),
           });
           if (!res.ok) throw new Error(`Update failed: ${res.status}`);
+          const updatedMemo = await res.json();
+          this.notes.forEach((n) => {
+            if (n.id === updatedMemo.id) Object.assign(n, updatedMemo);
+          });
         } catch (e) {
           memo.is_completed = !memo.is_completed;
           this.error = e.message;

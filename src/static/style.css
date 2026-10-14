@@ -23,7 +23,10 @@ body {
 }
 
 .memos-list {
-  margin-top: 1rem;
+  margin: 1rem 0 0;
+  list-style: none;
+  padding-left: 0;
+  color: inherit;
   display: flex;
   flex-flow: column wrap;
   gap: 0.2rem;
@@ -33,6 +36,7 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+    border-bottom: none;
 
     span {
       flex: 1;
